@@ -65,6 +65,7 @@ void setup()
 {
 	Serial.begin(115200);
 	display.init();
+	display.setRotation(1);
 
 	pinMode(CONFIG_PIN, INPUT_PULLUP);
 	delay(10);
@@ -74,7 +75,6 @@ void setup()
 		wifiManager.startConfigPortal("weatherink");
 	}
 
-	display.setRotation(1);
 	display.fillScreen(GxEPD_WHITE);
 	display.setFont(&meteocons_webfont48pt7b);
 	drawChar(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 'A');
@@ -102,7 +102,7 @@ void setup()
 				uint8_t buf[128];
 				if (stream->available())
 				{
-					int c = stream->read(buf, 128);
+					int c = stream->read(buf, sizeof(buf));
 					Serial.write(buf, c);
 				}
 				yield();
