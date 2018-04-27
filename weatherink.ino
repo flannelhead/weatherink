@@ -29,6 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <GxIO/GxIO.cpp>
 
 #include "meteocons.h"
+#include "credentials.h"
 
 GxIO_Class io(SPI, D8, D3, D4);
 GxEPD_Class display(io, D4, D2);
@@ -37,6 +38,17 @@ const int CONFIG_PIN = D1;
 const int DISPLAY_WIDTH = 250;
 const int DISPLAY_HEIGHT = 122;
 
+#define WUNDERGROUND_COUNTRY "FI"
+#define WUNDERGROUND_TOWN "Jyvaskyla"
+
+const char WUNDERGROUND_QUERY[] =
+	"http://api.wunderground.com/api/"
+	WUNDERGROUND_KEY
+	"/forecast/q/"
+	WUNDERGROUND_COUNTRY
+	"/"
+	WUNDERGROUND_TOWN
+	".json";
 
 void drawChar(Adafruit_GFX &gfx, int cx, int cy, char c)
 {
@@ -76,7 +88,7 @@ void setup()
 
 	{
 		HTTPClient client;
-		client.begin("http://example.com");
+		client.begin(WUNDERGROUND_QUERY);
 		int code = client.GET();
 		
 		if (code == 200)
