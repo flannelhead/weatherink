@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
@@ -45,15 +46,12 @@ void drawChar(Adafruit_GFX &gfx, int cx, int cy, char c)
 	gfx.getTextBounds(buf, 0, 0, &x, &y, &w, &h);
 	int dx = x + w/2;
 	int dy = y + h/2;
-	Serial.println(x);
-	Serial.println(y);
-	Serial.println(w);
-	Serial.println(h);
 	gfx.drawChar(cx - dx, cy - dy, c, GxEPD_BLACK, GxEPD_WHITE, 1);
 }
 
 void setup()
 {
+	Serial.begin(115200);
 	display.init();
 
 	pinMode(CONFIG_PIN, INPUT_PULLUP);
@@ -69,9 +67,39 @@ void setup()
 	display.setFont(&meteocons_webfont48pt7b);
 	drawChar(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 'A');
 	display.update();
+
+	int tries = 10;
+	while (WiFi.status() != WL_CONNECTED && tries-- > 0)
+	{
+		delay(500);
+	}
+
+	{
+		HTTPClient client;
+		client.begin("http://example.com");
+		int code = client.GET();
+		
+		if (code == 200)
+		{
+			int len = client.getSize();
+
+			WiFiClient *stream = client.getStreamPtr();
+
+			while (client.connected())
+			{
+				uint8_t buf[128];
+				if (stream->available())
+				{
+					int c = stream->read(buf, 128);
+					Serial.write(buf, c);
+				}
+				yield();
+			}
+		}
+		client.end();
+	}
 }
 
 void loop()
 {
-	delay(5000);
 }
