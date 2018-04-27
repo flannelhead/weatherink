@@ -32,3 +32,6 @@
 *.app
 
 .vscode
+
+fontconvert
+meteocons-webfont.ttf
