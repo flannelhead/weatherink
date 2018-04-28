@@ -216,7 +216,6 @@ void drawString(Adafruit_GFX &gfx, int cx, int cy, const String &s)
 	int dx = x + w/2;
 	int dy = y + h/2;
 	gfx.setCursor(cx - dx, cy - dy);
-	gfx.setTextColor(GxEPD_BLACK);
 	gfx.print(s);
 }
 
@@ -225,11 +224,21 @@ void setup()
 	Serial.begin(115200);
 	display.init();
 	display.setRotation(1);
+	display.setTextColor(GxEPD_BLACK);
 
 	pinMode(CONFIG_PIN, INPUT_PULLUP);
 	delay(10);
 	if (!digitalRead(CONFIG_PIN))
 	{
+		display.setFont(&FreeSans12pt7b);
+		drawString(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 - 30,
+			"Connect to SSID:");
+		drawString(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2,
+			"weatherink");
+		drawString(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 30,
+			"to configure");
+		display.update();
+
 		WiFiManager wifiManager;
 		wifiManager.startConfigPortal("weatherink");
 	}
@@ -266,11 +275,12 @@ void setup()
 
 			int step = DISPLAY_WIDTH / 3;
 			int x = DISPLAY_WIDTH / 6;
-			int y = 60;
+			int y = DISPLAY_HEIGHT / 2;
 			int n = 0;
 			for (const WeatherInfo &info : listener.getInfo())
 			{
 				display.setFont(&FreeSans12pt7b);
+
 				{
 					std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
 						info.weekday, "err");
@@ -288,14 +298,18 @@ void setup()
 					display.setFont(&meteocons_webfont36pt7b);
 					drawString(display, x, y, String(symbol));
 				}
+
 				x += step;
 				if (++n == 3) break;
 			}
+
+			display.update();
 		}
 		client.end();
 	}
 
-	display.update();
+	display.powerDown();
+	ESP.deepSleep(5 * 1000000UL);
 }
 
 void loop()
