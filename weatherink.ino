@@ -228,6 +228,7 @@ void setup()
 	display.init();
 	display.setRotation(1);
 	display.setTextColor(GxEPD_BLACK);
+	display.fillScreen(GxEPD_WHITE);
 
 	pinMode(CONFIG_PIN, INPUT_PULLUP);
 	delay(10);
@@ -246,14 +247,10 @@ void setup()
 		wifiManager.startConfigPortal("weatherink");
 	}
 
-	display.fillScreen(GxEPD_WHITE);
-
 	int tries = 10;
-	while (WiFi.status() != WL_CONNECTED && tries-- > 0)
-	{
-		delay(500);
-	}
+	while (WiFi.status() != WL_CONNECTED && tries-- > 0) delay(1000);
 
+	if (WiFi.status() == WL_CONNECTED)
 	{
 		HTTPClient client;
 		client.begin(WUNDERGROUND_QUERY);
