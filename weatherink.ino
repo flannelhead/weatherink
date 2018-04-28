@@ -233,9 +233,7 @@ void setup()
 	}
 
 	display.fillScreen(GxEPD_WHITE);
-	display.setFont(&meteocons_webfont48pt7b);
-	drawChar(display, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 'A');
-	display.update();
+	display.setFont(&meteocons_webfont36pt7b);
 
 	int tries = 10;
 	while (WiFi.status() != WL_CONNECTED && tries-- > 0)
@@ -265,17 +263,26 @@ void setup()
 				yield();
 			}
 
+			int step = DISPLAY_WIDTH / 3;
+			int x = DISPLAY_WIDTH / 6;
+			int y = 60;
+			int n = 0;
 			for (const WeatherInfo &info : listener.getInfo())
 			{
 				std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
 					info.weekday, "err");
 				char symbol = map_at_safe<char>(forecast_to_symbol,
 					info.forecast, ')');
-				Serial.println(symbol);
+				drawChar(display, x, y, symbol);
+				x += step;
+				n++;
+				if (n == 3) break;
 			}
 		}
 		client.end();
 	}
+
+	display.update();
 }
 
 void loop()
