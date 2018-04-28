@@ -58,16 +58,19 @@ const char WUNDERGROUND_QUERY[] =
 	WUNDERGROUND_TOWN
 	".json";
 
-const std::unordered_map<std::string, std::string> weekday_en_to_fi =
+const std::unordered_map<std::string, uint8_t> weekday_to_num =
 {
-	{"Mon", "ma"},
-	{"Tue", "ti"},
-	{"Wed", "ke"},
-	{"Thu", "to"},
-	{"Fri", "pe"},
-	{"Sat", "la"},
-	{"Sun", "su"}
+	{"Mon", 0},
+	{"Tue", 1},
+	{"Wed", 2},
+	{"Thu", 3},
+	{"Fri", 4},
+	{"Sat", 5},
+	{"Sun", 6}
 };
+
+const std::vector<std::string> weekdays_fi =
+	{ "ma", "ti", "ke", "to", "pe", "la", "su" };
 
 const std::unordered_map<std::string, char> forecast_to_symbol =
 {
@@ -213,8 +216,8 @@ void drawString(Adafruit_GFX &gfx, int cx, int cy, const String &s)
 	int16_t x, y;
 	uint16_t w, h;
 	gfx.getTextBounds((char *)s.c_str(), 0, 0, &x, &y, &w, &h);
-	int dx = x + w/2;
-	int dy = y + h/2;
+	int dx = x + w / 2;
+	int dy = y + h / 2;
 	gfx.setCursor(cx - dx, cy - dy);
 	gfx.print(s);
 }
@@ -281,10 +284,14 @@ void setup()
 			{
 				display.setFont(&FreeSans12pt7b);
 
+				int wday = map_at_safe<uint8_t>(weekday_to_num,
+					info.weekday, -1);
+
 				{
-					std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
-						info.weekday, "err");
-					drawString(display, x, y - 50, wday.c_str());
+					std::string wday_str;
+					if (wday >= 0) wday_str = weekdays_fi[wday];
+ 					else wday_str = "err";
+					drawString(display, x, y - 50, wday_str.c_str());
 				}
 
 				{
