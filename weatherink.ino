@@ -57,7 +57,7 @@ const char WUNDERGROUND_QUERY[] =
 	WUNDERGROUND_TOWN
 	".json";
 
-std::unordered_map<std::string, std::string> weekday_en_to_fi =
+const std::unordered_map<std::string, std::string> weekday_en_to_fi =
 {
 	{"Mon", "ma"},
 	{"Tue", "ti"},
@@ -66,6 +66,49 @@ std::unordered_map<std::string, std::string> weekday_en_to_fi =
 	{"Fri", "pe"},
 	{"Sat", "la"},
 	{"Sun", "su"}
+};
+
+const std::unordered_map<std::string, char> forecast_to_symbol =
+{
+  { "chanceflurries", 'X' },
+  { "chancerain", 'Q' },
+  { "chancesleet", 'W' },
+  { "chancesnow", 'V' },
+  { "chancetstorms", 'S' },
+  { "clear", 'B' },
+  { "cloudy", 'Y' },
+  { "flurries", 'X' },
+  { "fog", 'M' },
+  { "hazy", 'E' },
+  { "mostlycloudy", 'Y' },
+  { "mostlysunny", 'H' },
+  { "partlycloudy", 'H' },
+  { "partlysunny", 'J' },
+  { "sleet", 'W' },
+  { "rain", 'R' },
+  { "snow", 'W' },
+  { "sunny", 'B' },
+  { "tstorms", '0' },
+
+  { "nt_chanceflurries", '$' },
+  { "nt_chancerain", '7' },
+  { "nt_chancesleet", '#' },
+  { "nt_chancesnow", '#' },
+  { "nt_chancetstorms", '&' },
+  { "nt_clear", '2' },
+  { "nt_cloudy", 'Y' },
+  { "nt_flurries", '$' },
+  { "nt_fog", 'M' },
+  { "nt_hazy", 'E' },
+  { "nt_mostlycloudy", '5' },
+  { "nt_mostlysunny", '3' },
+  { "nt_partlycloudy", '4' },
+  { "nt_partlysunny", '4' },
+  { "nt_sleet", '9' },
+  { "nt_rain", '7' },
+  { "nt_snow", '#' },
+  { "nt_sunny", '4' },
+  { "nt_tstorms", '&' }
 };
 
 struct WeatherInfo
