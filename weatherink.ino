@@ -111,6 +111,15 @@ const std::unordered_map<std::string, char> forecast_to_symbol =
   { "nt_tstorms", '&' }
 };
 
+template <typename T> T map_at_safe(
+	const std::unordered_map<std::string, T> &mymap,
+	const std::string &key, const T &def)
+{
+	const auto it = mymap.find(key);
+	if (it == mymap.end()) return def;
+	return it->second;
+}
+
 struct WeatherInfo
 {
 	std::string forecast;
@@ -258,11 +267,11 @@ void setup()
 
 			for (const WeatherInfo &info : listener.getInfo())
 			{
-				Serial.println("-----");
-				Serial.println(weekday_en_to_fi.at(info.weekday).c_str());
-				Serial.println(info.forecast.c_str());
-				Serial.println(info.temp_low);
-				Serial.println(info.temp_high);
+				std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
+					info.weekday, "err");
+				char symbol = map_at_safe<char>(forecast_to_symbol,
+					info.forecast, ')');
+				Serial.println(symbol);
 			}
 		}
 		client.end();
