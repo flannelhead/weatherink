@@ -280,12 +280,13 @@ void setup()
 			int x = DISPLAY_WIDTH / 6;
 			int y = DISPLAY_HEIGHT / 2;
 			int n = 0;
+			int first_wday = -1;
 			for (const WeatherInfo &info : listener.getInfo())
 			{
 				display.setFont(&FreeSans12pt7b);
 
-				int wday = map_at_safe<uint8_t>(weekday_to_num,
-					info.weekday, -1);
+				int wday = map_at_safe<uint8_t>(weekday_to_num, info.weekday, -1);
+				if (first_wday == -1) first_wday = wday;
 
 				{
 					std::string wday_str;
@@ -310,7 +311,24 @@ void setup()
 				if (++n == 3) break;
 			}
 
-			display.update();
+			{
+				uint32_t wday_u = (uint32_t)first_wday;
+				uint32_t wday_rtc;
+				ESP.rtcUserMemoryRead(0, &wday_rtc, sizeof(wday_u));
+
+				if (wday_rtc == wday_u)
+				{
+					display.updateWindow(0, 0, display.width(), display.height());
+					Serial.println("Partial update");
+				}
+				else
+				{
+					display.update();
+					Serial.println("Full update");
+				}
+
+				ESP.rtcUserMemoryWrite(0, &wday_u, sizeof(wday_u));
+			}
 		}
 		client.end();
 	}
