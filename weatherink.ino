@@ -28,6 +28,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <GxIO/GxIO_SPI/GxIO_SPI.cpp>
 #include <GxIO/GxIO.cpp>
 
+#include <JsonListener.h>
+#include <JsonStreamingParser.h>
+
+#include <unordered_map>
+#include <vector>
+#include <string>
+
 #include "meteocons.h"
 #include "credentials.h"
 
@@ -49,6 +56,104 @@ const char WUNDERGROUND_QUERY[] =
 	"/"
 	WUNDERGROUND_TOWN
 	".json";
+
+std::unordered_map<std::string, std::string> weekday_en_to_fi =
+{
+	{"Mon", "ma"},
+	{"Tue", "ti"},
+	{"Wed", "ke"},
+	{"Thu", "to"},
+	{"Fri", "pe"},
+	{"Sat", "la"},
+	{"Sun", "su"}
+};
+
+struct WeatherInfo
+{
+	std::string forecast;
+	std::string weekday;
+	int temp_low;
+	int temp_high;
+};
+
+class WundergroundListener : public JsonListener
+{
+public:
+	WundergroundListener()
+	{
+		m_info_vec.reserve(4);
+	}
+
+	virtual void whitespace(char) {}
+	virtual void startDocument() {}
+	virtual void endDocument() {}
+
+	virtual void key(String key)
+	{
+		m_last_key = key;
+
+		if (key == "high") m_is_high = true;
+		else if (key == "low") m_is_high = false;
+	}
+
+	virtual void value(String value)
+	{
+		if (m_last_key == "celsius")
+		{
+			int val = strtol(value.c_str(), nullptr, 10);
+			if (m_is_high) m_info.temp_high = val;
+			else m_info.temp_low = val;
+		}
+		else if (m_last_key == "weekday_short")
+			m_info.weekday = value.c_str();
+		else if (m_last_key == "icon")
+			m_info.forecast = value.c_str();
+	}
+
+	virtual void startArray()
+	{
+		if (m_forecastday_level >= 0) m_forecastday_level++;
+		if (m_simpleforecast_level >= 0 && m_last_key == "forecastday")
+		{
+			m_forecastday_level = 0;
+			m_day_level = m_simpleforecast_level;
+		}
+	}
+
+	virtual void endArray()
+	{
+		if (m_forecastday_level >= 0) m_forecastday_level--;
+	}
+
+	virtual void startObject()
+	{
+		if (m_simpleforecast_level >= 0) m_simpleforecast_level++;
+		if (m_last_key == "simpleforecast") m_simpleforecast_level = 0;
+	}
+
+	virtual void endObject()
+	{
+		if (m_simpleforecast_level >= 0) m_simpleforecast_level--;
+
+		if (m_forecastday_level >= 0 && m_simpleforecast_level == m_day_level)
+		{
+			m_day_index++;
+			m_info_vec.push_back(m_info);
+		}
+	}
+
+	const std::vector<WeatherInfo> &getInfo() { return m_info_vec; }
+
+private:
+	String m_last_key;
+	int m_simpleforecast_level = -1;
+	int m_forecastday_level = -1;
+	int m_day_level =  -1;
+	int m_day_index = 0;
+	bool m_is_high = false;
+	WeatherInfo m_info;
+	std::vector<WeatherInfo> m_info_vec;
+};
 
 void drawChar(Adafruit_GFX &gfx, int cx, int cy, char c)
 {
@@ -93,19 +198,28 @@ void setup()
 		
 		if (code == 200)
 		{
-			int len = client.getSize();
-
+			JsonStreamingParser parser;
+			WundergroundListener listener;
+			parser.setListener(&listener);
 			WiFiClient *stream = client.getStreamPtr();
-
 			while (client.connected())
 			{
 				uint8_t buf[128];
 				if (stream->available())
 				{
 					int c = stream->read(buf, sizeof(buf));
-					Serial.write(buf, c);
+					for (int i = 0; i < c; ++i) parser.parse(buf[i]);
 				}
 				yield();
+			}
+
+			for (const WeatherInfo &info : listener.getInfo())
+			{
+				Serial.println("-----");
+				Serial.println(weekday_en_to_fi.at(info.weekday).c_str());
+				Serial.println(info.forecast.c_str());
+				Serial.println(info.temp_low);
+				Serial.println(info.temp_high);
 			}
 		}
 		client.end();
