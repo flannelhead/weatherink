@@ -45,6 +45,7 @@ GxEPD_Class display(io, D4, D2);
 const int CONFIG_PIN = D1;
 const int DISPLAY_WIDTH = 250;
 const int DISPLAY_HEIGHT = 122;
+const int UPDATE_INTERVAL_SEC = 15 * 60;
 
 #define WUNDERGROUND_COUNTRY "FI"
 #define WUNDERGROUND_TOWN "Jyvaskyla"
@@ -247,7 +248,7 @@ void setup()
 		wifiManager.startConfigPortal("weatherink");
 	}
 
-	int tries = 10;
+	int tries = 7;
 	while (WiFi.status() != WL_CONNECTED && tries-- > 0) delay(1000);
 
 	if (WiFi.status() == WL_CONNECTED)
@@ -330,9 +331,7 @@ void setup()
 	}
 
 	display.powerDown();
-	ESP.deepSleep(5 * 1000000UL);
+	ESP.deepSleep(UPDATE_INTERVAL_SEC * 1000000UL);
 }
 
-void loop()
-{
-}
+void loop() {}
