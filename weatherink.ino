@@ -253,6 +253,7 @@ void setup()
 	if (WiFi.status() == WL_CONNECTED)
 	{
 		HTTPClient client;
+		client.setTimeout(5000);
 		client.begin(WUNDERGROUND_QUERY);
 		int code = client.GET();
 		
