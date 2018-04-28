@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <GxGDE0213B1/GxGDE0213B1.cpp>
 #include <GxIO/GxIO_SPI/GxIO_SPI.cpp>
 #include <GxIO/GxIO.cpp>
+#include <Fonts/FreeSans12pt7b.h>
 
 #include <JsonListener.h>
 #include <JsonStreamingParser.h>
@@ -207,15 +208,16 @@ private:
 	std::vector<WeatherInfo> m_info_vec;
 };
 
-void drawChar(Adafruit_GFX &gfx, int cx, int cy, char c)
+void drawString(Adafruit_GFX &gfx, int cx, int cy, const String &s)
 {
-	char buf[] = {c, '\0'};
 	int16_t x, y;
 	uint16_t w, h;
-	gfx.getTextBounds(buf, 0, 0, &x, &y, &w, &h);
+	gfx.getTextBounds((char *)s.c_str(), 0, 0, &x, &y, &w, &h);
 	int dx = x + w/2;
 	int dy = y + h/2;
-	gfx.drawChar(cx - dx, cy - dy, c, GxEPD_BLACK, GxEPD_WHITE, 1);
+	gfx.setCursor(cx - dx, cy - dy);
+	gfx.setTextColor(GxEPD_BLACK);
+	gfx.print(s);
 }
 
 void setup()
@@ -233,7 +235,6 @@ void setup()
 	}
 
 	display.fillScreen(GxEPD_WHITE);
-	display.setFont(&meteocons_webfont36pt7b);
 
 	int tries = 10;
 	while (WiFi.status() != WL_CONNECTED && tries-- > 0)
@@ -269,14 +270,26 @@ void setup()
 			int n = 0;
 			for (const WeatherInfo &info : listener.getInfo())
 			{
-				std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
-					info.weekday, "err");
-				char symbol = map_at_safe<char>(forecast_to_symbol,
-					info.forecast, ')');
-				drawChar(display, x, y, symbol);
+				display.setFont(&FreeSans12pt7b);
+				{
+					std::string wday = map_at_safe<std::string>(weekday_en_to_fi,
+						info.weekday, "err");
+					drawString(display, x, y - 50, wday.c_str());
+				}
+
+				{
+					int temp_avg = (info.temp_low + info.temp_high + 1) / 2;
+					drawString(display, x, y + 50, String(temp_avg));
+				}
+
+				{
+					char symbol = map_at_safe<char>(forecast_to_symbol,
+						info.forecast, ')');
+					display.setFont(&meteocons_webfont36pt7b);
+					drawString(display, x, y, String(symbol));
+				}
 				x += step;
-				n++;
-				if (n == 3) break;
+				if (++n == 3) break;
 			}
 		}
 		client.end();
