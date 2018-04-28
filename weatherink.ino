@@ -319,12 +319,10 @@ void setup()
 				if (wday_rtc == wday_u)
 				{
 					display.updateWindow(0, 0, display.width(), display.height());
-					Serial.println("Partial update");
 				}
 				else
 				{
 					display.update();
-					Serial.println("Full update");
 				}
 
 				ESP.rtcUserMemoryWrite(0, &wday_u, sizeof(wday_u));
